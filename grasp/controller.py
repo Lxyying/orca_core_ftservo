@@ -18,8 +18,8 @@ try:
 
     ORCA_HAND_AVAILABLE = True
 except ImportError as e:
-    print(f"⚠️ 警告: 无法导入OrcaHand类或Utils: {e}")
-    print("🎮 将使用纯模拟模式")
+    print(f"警告: 无法导入OrcaHand类或Utils: {e}")
+    print("将使用纯模拟模式")
     ORCA_HAND_AVAILABLE = False
 
 
@@ -61,7 +61,7 @@ try:
 
     MODES_AVAILABLE = True
 except ImportError as e:
-    print(f"❌ 错误: 无法导入mode模块: {e}")
+    print(f"错误: 无法导入mode模块: {e}")
     MODES_AVAILABLE = False
 
 
@@ -138,7 +138,7 @@ class GraspController:
             from .mode import get_mode_manager as _get_mode_manager
             self.mode_manager = _get_mode_manager()
         else:
-            print("⚠️ 使用临时模式管理器")
+            print("使用临时模式管理器")
             self.mode_manager = TemporaryModeManager()
 
         # 处理硬件实例
@@ -148,9 +148,9 @@ class GraspController:
                 # 自动创建OrcaHand实例 - 关键修改：不依赖config_path
                 # 直接创建OrcaHand实例，不传递config_path，避免校准依赖
                 self.hand = OrcaHand()
-                print("✅ 自动创建OrcaHand实例（跳过配置文件依赖）")
+                print("自动创建OrcaHand实例（跳过配置文件依赖）")
             except Exception as e:
-                print(f"❌ 自动创建OrcaHand失败: {e}")
+                print(f"自动创建OrcaHand失败: {e}")
                 self.simulation = True
 
         # 从模式管理器获取电机映射信息
@@ -190,15 +190,15 @@ class GraspController:
         # 初始化
         if self.simulation:
             self._init_simulation()
-            print("✅ 抓取控制器：模拟模式已启动")
+            print("抓取控制器：模拟模式已启动")
         else:
             if self.hand is None:
-                print("❌ 硬件模式下必须提供hand_instance参数或OrcaHand可用")
+                print("硬件模式下必须提供hand_instance参数或OrcaHand可用")
                 self.simulation = True
                 self._init_simulation()
             else:
                 self._init_hardware()
-                print("✅ 抓取控制器：硬件模式已启动")
+                print("抓取控制器：硬件模式已启动")
 
     def _init_simulation(self):
         """初始化模拟模式 - 使用16关节结构"""
@@ -208,34 +208,34 @@ class GraspController:
             self.current_angles = self.initial_angles.copy()
             self.target_angles = self.initial_angles.copy()
 
-        print("🎮 模拟模式：使用16关节虚拟手部进行测试")
-        print(f"📊 使用中立位角度: {self._format_angles_for_display(self.initial_angles)}")
+        print("模拟模式：使用16关节虚拟手部进行测试")
+        print(f"使用中立位角度: {self._format_angles_for_display(self.initial_angles)}")
 
     def _init_hardware(self):
         """初始化硬件模式 - 修复版本：确保真正连接硬件"""
         try:
             # 检查hand实例是否有必要的方法
             if not hasattr(self.hand, 'get_joint_pos') or not hasattr(self.hand, 'set_joint_pos'):
-                print("❌ 提供的hand实例缺少必要方法")
+                print("提供的hand实例缺少必要方法")
                 raise AttributeError("hand_instance缺少必要方法")
 
             # 关键修复：确保调用connect方法
             if not self.hand.is_connected():
-                print("🔌 尝试连接手部硬件...")
+                print("尝试连接手部硬件...")
                 success, message = self.hand.connect()
                 if not success:
-                    print(f"❌ 硬件连接失败: {message}")
+                    print(f"硬件连接失败: {message}")
                     raise ConnectionError(f"硬件连接失败: {message}")
-                print("✅ 手部硬件连接成功")
+                print("手部硬件连接成功")
             else:
-                print("✅ 手部硬件已连接")
+                print("手部硬件已连接")
 
             # 启用扭矩
-            print("🔧 启用电机扭矩...")
+            print("启用电机扭矩...")
             self.hand.enable_torque()
 
             # 设置控制模式
-            print("🎛️ 设置控制模式...")
+            print("设置控制模式...")
             self.hand.set_control_mode('position')
 
             # 使用mode.py中的中立位作为初始角度
@@ -244,8 +244,8 @@ class GraspController:
                 self.current_angles = self.initial_angles.copy()
                 self.target_angles = self.initial_angles.copy()
 
-            print(f"✅ 硬件模式初始化完成")
-            print(f"📊 使用中立位角度: {self._format_angles_for_display(self.initial_angles)}")
+            print(f"硬件模式初始化完成")
+            print(f"使用中立位角度: {self._format_angles_for_display(self.initial_angles)}")
 
             # 尝试从硬件读取当前角度
             try:
@@ -253,17 +253,17 @@ class GraspController:
                 if joint_pos and all(v is not None for v in joint_pos.values()):
                     with self.angles_lock:
                         self.current_angles = joint_pos
-                    print(f"📊 从硬件读取当前角度: {self._format_angles_for_display(joint_pos)}")
+                    print(f"从硬件读取当前角度: {self._format_angles_for_display(joint_pos)}")
                 else:
-                    print("⚠️ 从硬件读取的角度包含None值，使用中立位")
+                    print("从硬件读取的角度包含None值，使用中立位")
             except Exception as e:
-                print(f"⚠️ 无法从硬件读取角度: {e}")
+                print(f"无法从硬件读取角度: {e}")
 
         except Exception as e:
-            print(f"❌ 硬件初始化失败: {e}")
+            print(f"硬件初始化失败: {e}")
             self.simulation = True
             self._init_simulation()
-            print("🔄 已自动切换到模拟模式")
+            print("已自动切换到模拟模式")
 
     def _format_angles_for_display(self, angles):
         """格式化角度显示，只显示关键关节"""
@@ -303,12 +303,12 @@ class GraspController:
                 # 直接使用 hand 的 set_motor_positions_direct 方法
                 return self.hand.set_motor_positions_direct(motor_positions)
             except Exception as e:
-                print(f"❌ 硬件操作失败 (set_motor_positions_direct): {e}")
+                print(f"硬件操作失败 (set_motor_positions_direct): {e}")
                 import traceback
                 traceback.print_exc()
                 return False
         else:
-            print("❌ 硬件模式下hand实例不可用")
+            print("硬件模式下hand实例不可用")
             return False
 
     def get_motor_positions_dict(self) -> Dict[int, float]:
@@ -351,23 +351,23 @@ class GraspController:
                 # 保存扭矩参数供后续使用
                 self.current_torque_params = mode_info.get('torque_params', {})
 
-                print(f"🎯 已切换到模式 {mode_id}: {mode_info['name']}")
+                print(f"已切换到模式 {mode_id}: {mode_info['name']}")
                 # _format_angles_for_display 内部会将弧度转为度数显示，方便人类阅读，这里不需要改
-                print(f"📊 目标角度: {self._format_angles_for_display(target_angles_rad)}")
-                print(f"🔧 扭矩设置: {self.current_torque_params.get('hold_torque', 400)}")
+                print(f"目标角度: {self._format_angles_for_display(target_angles_rad)}")
+                print(f"扭矩设置: {self.current_torque_params.get('hold_torque', 400)}")
                 return True
             else:
-                print(f"❌ 模式 {mode_id} 设置失败")
+                print(f"模式 {mode_id} 设置失败")
                 return False
 
         except Exception as e:
-            print(f"❌ 设置模式时出错: {e}")
+            print(f"设置模式时出错: {e}")
             return False
 
     def start_grasping(self):
         """开始抓取运动 - 逐步闭合手指到目标角度"""
         if self.is_moving:
-            print("⚠️ 已有运动在进行，先停止当前运动")
+            print("已有运动在进行，先停止当前运动")
             self.stop_and_hold()
             time.sleep(0.2)
 
@@ -379,12 +379,12 @@ class GraspController:
         self.motion_thread = threading.Thread(target=self._grasp_motion)
         self.motion_thread.daemon = True
         self.motion_thread.start()
-        print("🤏 开始抓取运动...")
+        print("开始抓取运动...")
 
     def start_releasing(self):
         """开始释放运动 - 逐步张开手指到初始位置"""
         if self.is_moving:
-            print("⚠️ 已有运动在进行，先停止当前运动")
+            print("已有运动在进行，先停止当前运动")
             self.stop_and_hold()
             time.sleep(0.2)
 
@@ -396,7 +396,7 @@ class GraspController:
         self.motion_thread = threading.Thread(target=self._release_motion)
         self.motion_thread.daemon = True
         self.motion_thread.start()
-        print("🖐️ 开始释放运动...")
+        print("开始释放运动...")
 
     def stop_and_hold(self):
         """停止运动并保持当前位置"""
@@ -408,7 +408,7 @@ class GraspController:
         if self.motion_thread and self.motion_thread.is_alive():
             self.motion_thread.join(timeout=1.0)
 
-        print("⏸️ 运动已停止，保持当前位置")
+        print("运动已停止，保持当前位置")
 
     def realtime_close_step(self):
         """实时闭合一步 - 静默版"""
@@ -421,7 +421,6 @@ class GraspController:
 
         # 检查是否已经达到目标角度
         if self._has_reached_target(current_angles, target_angles):
-            # print("✅ 已到达目标角度，停止闭合")
             return True
 
         # 计算每个关节的移动步长（弧度）
@@ -441,7 +440,7 @@ class GraspController:
         # 验证新角度安全性
         is_valid, message = self.mode_manager.validate_angles(new_angles)
         if not is_valid:
-            print(f"⚠️ 角度安全性警告: {message}")
+            print(f"角度安全性警告: {message}")
             return False
 
         # 使用直接电机控制
@@ -459,10 +458,10 @@ class GraspController:
                     self.current_angles = new_angles.copy()
                 return True
             else:
-                print("❌ 直接电机控制失败")
+                print("直接电机控制失败")
                 return False
         else:
-            print("❌ 没有找到对应的电机映射")
+            print("没有找到对应的电机映射")
             return False
 
     def realtime_open_step(self):
@@ -474,7 +473,6 @@ class GraspController:
 
         # 检查是否已经达到初始角度
         if self._has_reached_initial(current_angles, initial_angles):
-            # print("✅ 已到达初始角度，停止张开")
             return True
 
         # 计算每个关节的移动步长（弧度）
@@ -493,10 +491,9 @@ class GraspController:
         # 验证新角度安全性
         is_valid, message = self.mode_manager.validate_angles(new_angles)
         if not is_valid:
-            print(f"⚠️ 角度安全性警告: {message}")
+            print(f"角度安全性警告: {message}")
             return False
 
-        # 🔥 关键修改：使用直接电机控制
         motor_positions = {}
         for joint, angle in new_angles.items():
             motor_id = self.joint_to_motor_map.get(joint)
@@ -504,7 +501,6 @@ class GraspController:
                 motor_positions[motor_id] = angle
 
         if motor_positions:
-            # print(f"🔌 使用直接电机控制，设置 {len(motor_positions)} 个电机")
             success = self.set_motor_positions_direct(motor_positions)
             if success:
                 # 更新当前角度状态
@@ -512,10 +508,10 @@ class GraspController:
                     self.current_angles = new_angles.copy()
                 return True
             else:
-                print("❌ 直接电机控制失败")
+                print("直接电机控制失败")
                 return False
         else:
-            print("❌ 没有找到对应的电机映射")
+            print("没有找到对应的电机映射")
             return False
 
     def _has_reached_target(self, current_angles, target_angles):
@@ -551,11 +547,11 @@ class GraspController:
             try:
                 if hasattr(self.hand, 'disable_torque'):
                     self.hand.disable_torque()
-                    print("🔒 硬件扭矩已禁用")
+                    print("硬件扭矩已禁用")
             except Exception as e:
-                print(f"⚠️ 急停命令发送失败: {e}")
+                print(f"急停命令发送失败: {e}")
 
-        print("🛑 紧急停止！所有运动已终止")
+        print("紧急停止！所有运动已终止")
 
     # ==================== 扭矩控制方法 ====================
 
@@ -586,12 +582,12 @@ class GraspController:
             )
 
         except Exception as e:
-            print(f"❌ 启动扭矩保持失败: {e}")
+            print(f"启动扭矩保持失败: {e}")
 
     def start_timed_torque_hold(self, motor_ids: list = None,
                                 torque_limit: int = 400,
                                 duration: float = 60.0):
-        """启动限时扭矩保持 - 简化版本，避免格式问题"""
+        """启动限时扭矩保持"""
         if motor_ids is None:
             motor_ids = self.motor_ids
 
@@ -601,16 +597,15 @@ class GraspController:
             time.sleep(0.1)
 
         print("\n" + "=" * 40)
-        print(f"⏹️ 运动停止，启动扭矩保持")
-        print(f"🔧 扭矩限制: {torque_limit}, 时长: {duration}秒")
+        print(f"运动停止，启动扭矩保持")
+        print(f"扭矩限制: {torque_limit}, 时长: {duration}秒")
         print("=" * 40)
 
         if self.simulation:
-            print(f"🎮 模拟模式: 启动 {duration}秒扭矩保持")
+            print(f"模拟模式: 启动 {duration}秒扭矩保持")
             return
 
         try:
-            # ========== 简化方案：直接使用set_motor_positions_direct ==========
             # 获取当前位置
             with self.angles_lock:
                 current_angles = self.current_angles.copy()
@@ -622,21 +617,19 @@ class GraspController:
                 if motor_id and motor_id in motor_ids:
                     motor_positions[motor_id] = angle
 
-            print(f"🔧 锁定 {len(motor_positions)} 个电机的位置")
+            print(f"锁定 {len(motor_positions)} 个电机的位置")
 
             # 设置扭矩限制
             self.set_torque_limit_direct(motor_ids, torque_limit)
 
-            # 使用现有的set_motor_positions_direct方法设置位置
-            # 这个方法已经经过测试，不会出现格式问题
             if motor_positions:
                 success = self.set_motor_positions_direct(motor_positions)
                 if success:
-                    print("✅ 位置锁定成功，扭矩保持已启动")
+                    print("位置锁定成功，扭矩保持已启动")
                 else:
-                    print("❌ 位置锁定失败")
+                    print("位置锁定失败")
             else:
-                print("⚠️ 没有找到有效的电机位置")
+                print("没有找到有效的电机位置")
 
             print(f"⏱️ 已启动 {duration}秒扭矩保持，扭矩限制 {torque_limit}")
 
@@ -647,7 +640,7 @@ class GraspController:
             self._is_torque_holding = True
 
         except Exception as e:
-            print(f"❌ 启动扭矩保持失败: {e}")
+            print(f"启动扭矩保持失败: {e}")
             import traceback
             traceback.print_exc()
 
@@ -665,10 +658,10 @@ class GraspController:
                 self._torque_hold_timer.cancel()
                 self._torque_hold_timer = None
 
-            print("🔓 扭矩保持已取消")
+            print("扭矩保持已取消")
 
         except Exception as e:
-            print(f"❌ 取消扭矩保持失败: {e}")
+            print(f"取消扭矩保持失败: {e}")
 
     def set_torque_limit_direct(self, motor_ids: list, torque_limit: int):
         """直接设置扭矩限制值 - 修复版本"""
@@ -678,7 +671,7 @@ class GraspController:
         if self.simulation:
             # 显示涉及的关节名称
             joint_names = [self.motor_to_joint_map.get(mid, f"未知({mid})") for mid in motor_ids]
-            print(f"🎮 模拟模式: 设置关节 {joint_names} 扭矩限制为 {torque_limit}")
+            print(f"模拟模式: 设置关节 {joint_names} 扭矩限制为 {torque_limit}")
             return
 
         try:
@@ -692,22 +685,22 @@ class GraspController:
                         result, error = self.hand._dxl_client.protocol.write2ByteTxRx(motor_id, 48, torque_limit)
                         if result == 0:
                             success_count += 1
-                            print(f"✅ 设置关节 {joint_name}(电机{motor_id}) 扭矩限制为 {torque_limit}")
+                            print(f"设置关节 {joint_name}(电机{motor_id}) 扭矩限制为 {torque_limit}")
                         else:
-                            print(f"❌ 设置关节 {joint_name}(电机{motor_id}) 扭矩限制失败: 错误码 {result}")
+                            print(f"设置关节 {joint_name}(电机{motor_id}) 扭矩限制失败: 错误码 {result}")
                     except Exception as e:
-                        print(f"❌ 设置电机 {motor_id} 扭矩限制异常: {e}")
+                        print(f"设置电机 {motor_id} 扭矩限制异常: {e}")
 
-                print(f"📊 扭矩设置完成: {success_count}/{len(motor_ids)} 个电机成功")
+                print(f"扭矩设置完成: {success_count}/{len(motor_ids)} 个电机成功")
             else:
-                print("❌ 无法访问硬件客户端")
+                print("无法访问硬件客户端")
         except Exception as e:
-            print(f"❌ 设置扭矩限制失败: {e}")
+            print(f"设置扭矩限制失败: {e}")
 
     def cancel_torque_hold_on_other_actions(self):
         """在其他操作时取消扭矩保持"""
         if self._is_torque_holding:
-            print("🔄 检测到其他操作，取消扭矩保持")
+            print("检测到其他操作，取消扭矩保持")
             self._cancel_torque_hold()
 
     def get_motor_pos(self):
@@ -731,13 +724,12 @@ class GraspController:
                 if isinstance(positions, list):
                     return positions
                 else:
-                    print(f"⚠️ get_motor_pos 返回了非列表类型: {type(positions)}")
+                    print(f"get_motor_pos 返回了非列表类型: {type(positions)}")
                     return [0] * len(self.motor_ids)
             else:
                 # 备用方案
                 return [0] * len(self.motor_ids)
 
-    # ==================== 原有运动控制方法 ====================
 
     def _grasp_motion(self):
         """抓取运动线程函数 - 逐步闭合到目标角度"""
@@ -763,14 +755,14 @@ class GraspController:
                 time.sleep(0.1 / self.motion_speed)
 
             except Exception as e:
-                print(f"❌ 抓取运动出错: {e}")
+                print(f"抓取运动出错: {e}")
                 break
 
         self.is_moving = False
         if not self.stop_motion.is_set():
-            print("✅ 抓取运动完成")
+            print("抓取运动完成")
         else:
-            print("⏹️ 抓取运动被中断")
+            print("抓取运动被中断")
 
     def _release_motion(self):
         """释放运动线程函数 - 逐步张回到初始位置"""
@@ -796,14 +788,14 @@ class GraspController:
                 time.sleep(0.1 / self.motion_speed)
 
             except Exception as e:
-                print(f"❌ 释放运动出错: {e}")
+                print(f"释放运动出错: {e}")
                 break
 
         self.is_moving = False
         if not self.stop_motion.is_set():
-            print("✅ 释放运动完成")
+            print("释放运动完成")
         else:
-            print("⏹️ 释放运动被中断")
+            print("释放运动被中断")
 
     def _calculate_next_step(self, direction: str) -> Dict[str, float]:
         """计算下一步的角度 - 16关节版本"""
@@ -918,7 +910,7 @@ class GraspController:
         # 验证角度安全性
         is_valid, message = self.mode_manager.validate_angles(angles)
         if not is_valid:
-            print(f"⚠️ 角度安全性警告: {message}")
+            print(f"角度安全性警告: {message}")
             return
 
         # 更新当前角度
@@ -937,17 +929,16 @@ class GraspController:
                     motor_positions[motor_id] = angle
 
             if motor_positions:
-                # print(f"🔌 直接控制 {len(motor_positions)} 个电机: {motor_positions}") # <-- 原始冗长打印已注释/删除
                 success = self.set_motor_positions_direct(motor_positions)
                 if success:
                     pass  # 移除原始代码中的延迟和验证打印
                 else:
-                    print("❌ 直接电机控制失败")
+                    print("直接电机控制失败")
             else:
-                print("❌ 没有找到对应的电机映射")
+                print("没有找到对应的电机映射")
 
         except Exception as e:
-            print(f"❌ 直接电机控制异常: {e}")
+            print(f"直接电机控制异常: {e}")
             import traceback
             traceback.print_exc()
 
@@ -961,7 +952,7 @@ class GraspController:
                     with self.angles_lock:
                         self.current_angles = hardware_angles
             except Exception as e:
-                print(f"⚠️ 无法从硬件读取角度: {e}")
+                print(f"无法从硬件读取角度: {e}")
 
         with self.angles_lock:
             return self.current_angles.copy()
@@ -1067,7 +1058,7 @@ class GraspController:
                             'moving': moving_status.get(motor_id, False)
                         }
             except Exception as e:
-                print(f"❌ 获取电机状态失败: {e}")
+                print(f"获取电机状态失败: {e}")
         return status_info
 
     def switch_to_hardware(self, hand_instance):
@@ -1084,7 +1075,7 @@ class GraspController:
         self.simulation = False
         self.hand = hand_instance
         self._init_hardware()
-        print("🔄 已切换到硬件模式")
+        print("已切换到硬件模式")
 
     def switch_to_simulation(self):
         """从硬件模式切换到模拟模式"""
@@ -1095,7 +1086,7 @@ class GraspController:
         self.simulation = True
         self.hand = None
         self._init_simulation()
-        print("🔄 已切换到模拟模式")
+        print("已切换到模拟模式")
 
 
 # 全局控制器实例
@@ -1141,7 +1132,7 @@ def print_controller_status():
 
 # 测试代码
 if __name__ == "__main__":
-    print("🧪 抓取控制器测试...")
+    print("抓取控制器测试...")
 
     # 创建模拟控制器进行测试
     controller = GraspController(simulation=True)
@@ -1167,4 +1158,4 @@ if __name__ == "__main__":
 
     print_controller_status()
 
-    print("\n✅ 16关节控制器测试完成")
+    print("\n 16关节控制器测试完成")

@@ -23,7 +23,11 @@ import os
 import sys
 
 # 添加飞特SDK路径
-sys.path.append(os.path.join(os.path.dirname(__file__), '..', '..', 'ftservo_python_sdk'))
+try:
+    from ftservo_python_sdk import PortHandler, protocol_packet_handler
+except ImportError:
+    import ftservo_python_sdk
+    from ftservo_python_sdk import PortHandler, protocol_packet_handler
 
 # 飞特舵机协议版本
 PROTOCOL_VERSION = 0

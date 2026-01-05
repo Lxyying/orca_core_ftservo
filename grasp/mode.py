@@ -34,7 +34,7 @@ class  GraspModeManager:
 
     def _load_hardware_config(self, model_path_arg):
 
-        print("⚙️ 加载硬件配置: 使用硬编码数据")
+        print("加载硬件配置: 使用硬编码数据")
 
         # A. 手动定义关节顺序 (根据 controller.py 中的模拟手部结构)
         # 16关节：拇指4，食中无名小指各3 (总共 4 + 4*3 = 16)
@@ -146,8 +146,8 @@ class  GraspModeManager:
                     'safe_max': max_val - margin
                 }
 
-        print(f"✅ 已手动配置 {len(self.joint_order)} 个关节的映射与安全限制")
-        print(f"🔌 电机映射: {self.joint_to_motor_map}")
+        print(f"已手动配置 {len(self.joint_order)} 个关节的映射与安全限制")
+        print(f"电机映射: {self.joint_to_motor_map}")
 
     def get_mode(self, mode_id):
         """获取模式数据"""
@@ -164,7 +164,7 @@ class  GraspModeManager:
                 limits = self.safety_limits[joint]
                 # 检查物理极限
                 if angle < limits['hard_min'] or angle > limits['hard_max']:
-                    return False, f"❌ 关节 {joint} ({angle:.1f}) 超出物理极限 [{limits['hard_min']}, {limits['hard_max']}]"
+                    return False, f"关节 {joint} ({angle:.1f}) 超出物理极限 [{limits['hard_min']}, {limits['hard_max']}]"
                 # 检查软限位
                 elif angle < limits['safe_min'] or angle > limits['safe_max']:
                     warnings.append(f"{joint}")
@@ -489,7 +489,7 @@ class  GraspModeManager:
             }
         }
 
-        print(f"✅ 已初始化 {len(self.modes)} 个抓取模式")
+        print(f"已初始化 {len(self.modes)} 个抓取模式")
         for mode_id, mode_info in self.modes.items():
             torque_params = mode_info.get('torque_params', {})
             print(f"  模式 {mode_id}: {mode_info['name']} - 扭矩限制: {torque_params.get('hold_torque', 400)}")
@@ -517,10 +517,10 @@ class  GraspModeManager:
         """更新指定模式的扭矩参数"""
         if mode_id in self.modes:
             self.modes[mode_id]['torque_params'] = torque_params
-            print(f"✅ 已更新模式 {mode_id} 的扭矩参数: {torque_params}")
+            print(f"已更新模式 {mode_id} 的扭矩参数: {torque_params}")
             return True
         else:
-            print(f"❌ 模式 {mode_id} 不存在")
+            print(f"模式 {mode_id} 不存在")
             return False
 
 
@@ -546,11 +546,11 @@ if __name__ == "__main__":
     for mode_id in [1, 2, 3]:
         mode = mode_manager.get_mode(mode_id)
         if mode:
-            print(f"✅ 模式 {mode_id}: {mode['name']}")
+            print(f"模式 {mode_id}: {mode['name']}")
             torque_params = mode.get('torque_params', {})
             print(f"   扭矩设置: {torque_params}")
         else:
-            print(f"❌ 模式 {mode_id} 不存在")
+            print(f"模式 {mode_id} 不存在")
 
     # 测试电机映射
     print("\n2. 测试电机映射...")
@@ -575,4 +575,4 @@ if __name__ == "__main__":
     for mode_id, info in all_modes.items():
         print(f"模式 {mode_id}: {info['name']} - 扭矩: {info['torque_limit']}")
 
-    print("\n✅ 模式管理器测试完成")
+    print("\n模式管理器测试完成")

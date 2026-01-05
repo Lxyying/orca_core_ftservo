@@ -8,7 +8,7 @@ from pynput import keyboard
 try:
     from .controller import get_grasp_controller, GraspController
 except ImportError as e:
-    print(f"❌ 错误: 无法导入controller模块: {e}")
+    print(f"错误: 无法导入controller模块: {e}")
 
 
     class GraspController:
@@ -90,11 +90,11 @@ class KeyboardController:
             'on_torque_hold_cancel': None
         }
 
-        print("⌨️  键盘控制器已初始化")
+        print("键盘控制器已初始化")
 
     def start(self) -> bool:
         if self.is_running:
-            print("⚠️ 键盘控制器已在运行中。")
+            print("键盘控制器已在运行中。")
             return True
 
         try:
@@ -109,10 +109,10 @@ class KeyboardController:
             self.control_thread.start()
 
             self._print_controls()
-            print("✅ 键盘控制已启动")
+            print("键盘控制已启动")
             return True
         except Exception as e:
-            print(f"❌ 启动键盘控制失败: {e}")
+            print(f"启动键盘控制失败: {e}")
             self.is_running = False
             return False
 
@@ -129,7 +129,7 @@ class KeyboardController:
         if self.control_thread and self.control_thread.is_alive():
             self.control_thread.join(timeout=1.0)
 
-        print("🛑 键盘控制已停止")
+        print("键盘控制已停止")
 
     def _on_key_press(self, key) -> bool:
         try:
@@ -150,42 +150,42 @@ class KeyboardController:
 
         if char in ('1', '2', '3', '4','5','6','7'):
             mode_id = int(char)
-            print(f"🔄 键盘: 检测到数字键 '{char}'，切换到模式 {mode_id}")
+            print(f"键盘: 检测到数字键 '{char}'，切换到模式 {mode_id}")
 
             # 添加模式切换前的状态检查
             current_mode_before = self.controller.current_mode
-            print(f"🔍 切换前当前模式: {current_mode_before}")
+            print(f"切换前当前模式: {current_mode_before}")
 
             success = self.controller.set_mode(mode_id)
 
             # 添加模式切换后的状态检查
             current_mode_after = self.controller.current_mode
-            print(f"🔍 切换后当前模式: {current_mode_after}")
+            print(f"切换后当前模式: {current_mode_after}")
 
             if success and current_mode_after == mode_id:
-                print(f"✅ 键盘: 成功切换到模式 {mode_id}")
+                print(f"键盘: 成功切换到模式 {mode_id}")
                 if self.control_callbacks['on_mode_change']:
                     self.control_callbacks['on_mode_change'](mode_id)
             else:
-                print(f"❌ 键盘: 切换到模式 {mode_id} 失败")
+                print(f"键盘: 切换到模式 {mode_id} 失败")
             return True
 
         elif key == keyboard.Key.enter:
             if not self.enter_pressed:
                 self.enter_pressed = True
                 self.backspace_pressed = False  # 确保互斥
-                print("🔍 键盘: Enter键按下 - 开始闭合")
+                print("键盘: Enter键按下 - 开始闭合")
             return True
 
         elif key == keyboard.Key.backspace:
             if not self.backspace_pressed:
                 self.backspace_pressed = True
                 self.enter_pressed = False  # 确保互斥
-                print("🔍 键盘: Backspace键按下 - 开始张开")
+                print("键盘: Backspace键按下 - 开始张开")
             return True
 
         elif key == keyboard.Key.space:
-            print("🔍 键盘: Space键按下 - 紧急停止")
+            print("键盘: Space键按下 - 紧急停止")
             self.controller.emergency_stop()
             if self.control_callbacks['on_emergency_stop']:
                 self.control_callbacks['on_emergency_stop']()
@@ -193,12 +193,12 @@ class KeyboardController:
 
         # ==================== 功能按键 ====================
         elif char in ('s', 'S'):
-            print("🔍 键盘: S键按下 - 显示电机状态")
+            print("键盘: S键按下 - 显示电机状态")
             self._show_motor_status()
             return True
 
         elif char in ('t', 'T'):
-            print("🔍 键盘: T键按下 - 手动启动扭矩保持")
+            print("键盘: T键按下 - 手动启动扭矩保持")
             torque_limit = 400
             duration = 60.0
 
@@ -217,27 +217,27 @@ class KeyboardController:
             return True
 
         elif char in ('c', 'C'):
-            print("🔍 键盘: C键按下 - 触发校准")
+            print("键盘: C键按下 - 触发校准")
             if hasattr(self.controller, 'trigger_calibration'):
                 self.controller.trigger_calibration()
             return True
 
         elif key == keyboard.Key.esc or char in ('q', 'Q'):
-            print("🔍 键盘: 退出键按下")
+            print("键盘: 退出键按下")
             self._handle_exit()
             return False  # 停止 pynput 监听
 
         else:
             # 其他未处理的按键
             key_name = char if char else str(key)
-            print(f"🔍 键盘: 未处理按键 '{key_name}'")
+            print(f"键盘: 未处理按键 '{key_name}'")
             return True
 
     def _on_key_release(self, key) -> bool:
         try:
             if key == keyboard.Key.enter:
                 if self.enter_pressed:
-                    print("🔍 键盘: Enter键释放 - 启动扭矩保持")
+                    print("键盘: Enter键释放 - 启动扭矩保持")
                     # Enter键松开时启动一分钟扭矩保持
                     torque_limit = 400  # 默认值
                     duration = 60.0  # 默认60秒
@@ -263,11 +263,11 @@ class KeyboardController:
 
             elif key == keyboard.Key.backspace:
                 if self.backspace_pressed:
-                    print("🔍 键盘: Backspace键释放 - 停止张开")
+                    print("键盘: Backspace键释放 - 停止张开")
                 self.backspace_pressed = False
 
         except Exception as e:
-            print(f"❌ 按键释放处理错误: {e}")
+            print(f"按键释放处理错误: {e}")
             import traceback
             traceback.print_exc()
         return True
@@ -277,7 +277,7 @@ class KeyboardController:
         last_print_time = time.time()
         print_interval = 1  # 打印间隔(秒)
 
-        print("🔄 键盘控制循环已启动 - 直接电机控制模式")
+        print("键盘控制循环已启动 - 直接电机控制模式")
 
         while self.is_running:
             try:
@@ -291,13 +291,13 @@ class KeyboardController:
 
                     # 2. 状态打印：只在间隔时间到达时打印
                     if current_time - last_print_time > print_interval:
-                        print(f"🔑 Enter键按下中，执行第 {step_count} 步闭合")
+                        print(f"Enter键按下中，执行第 {step_count} 步闭合")
                         last_print_time = current_time
 
                     # 3. 目标到达逻辑
                     if not moved and step_count > 1:
                         if not hasattr(self, '_target_reached_printed') or not self._target_reached_printed:
-                            print("🎯 已到达目标抓取位置")
+                            print("已到达目标抓取位置")
                             self._target_reached_printed = True
                     else:
                         self._target_reached_printed = False
@@ -310,13 +310,13 @@ class KeyboardController:
 
                     # 2. 状态打印：只在间隔时间到达时打印
                     if current_time - last_print_time > print_interval:
-                        print(f"🔑 Backspace键按下中，执行第 {step_count} 步张开")
+                        print(f"Backspace键按下中，执行第 {step_count} 步张开")
                         last_print_time = current_time
 
                     # 3. 目标到达逻辑
                     if not moved and step_count > 1:
                         if not hasattr(self, '_initial_reached_printed') or not self._initial_reached_printed:
-                            print("🖐️ 已完全张开")
+                            print("已完全张开")
                             self._initial_reached_printed = True
                     else:
                         self._initial_reached_printed = False
@@ -324,21 +324,21 @@ class KeyboardController:
                 else:
                     # 没有按键按下时的处理
                     if step_count > 0:
-                        print(f"⏹️ 按键释放，停止运动。总共执行了 {step_count} 步")
+                        print(f"按键释放，停止运动。总共执行了 {step_count} 步")
                         step_count = 0
 
                 # 控制循环的休眠时间
                 time.sleep(self.control_interval)
 
             except Exception as e:
-                print(f"❌ 控制循环错误: {e}")
+                print(f"控制循环错误: {e}")
                 import traceback
                 traceback.print_exc()
                 time.sleep(0.1)
 
     def _handle_exit(self):
         self.is_running = False
-        print("\n👋 正在退出...")
+        print("\n 正在退出...")
         if self.control_callbacks['on_exit']:
             self.control_callbacks['on_exit']()
 
@@ -375,15 +375,15 @@ class KeyboardController:
                 # 显示扭矩保持状态
                 status = self.controller.get_status()
                 if status.get('is_torque_holding', False):
-                    print("💪 扭矩保持: 激活中")
+                    print("扭矩保持: 激活中")
                 else:
-                    print("🔓 扭矩保持: 未激活")
+                    print("扭矩保持: 未激活")
 
             else:
-                print("❌ 控制器不支持获取电机状态信息")
+                print("控制器不支持获取电机状态信息")
 
         except Exception as e:
-            print(f"❌ 获取电机状态失败: {e}")
+            print(f"获取电机状态失败: {e}")
 
     def set_callback(self, event: str, callback: Callable):
         if event in self.control_callbacks:
@@ -391,7 +391,7 @@ class KeyboardController:
 
     def _print_controls(self):
         print("\n" + "=" * 60)
-        print("               ORCA Hand 键盘控制 (修复版)")
+        print("               ORCA Hand 键盘控制")
         print("=" * 60)
         print("📏 单位说明: 所有角度使用弧度制")
         print("             (1 rad ≈ 57.3°, π rad = 180°)")
@@ -423,7 +423,7 @@ class KeyboardController:
 
 # 测试代码
 if __name__ == "__main__":
-    print("🧪 键盘控制器测试...")
+    print("键盘控制器测试...")
 
     # 创建模拟控制器
     controller = GraspController(simulation=True)
@@ -443,23 +443,23 @@ if __name__ == "__main__":
                 angle_deg = math.degrees(angle_rad)
                 print(f"  关节 {joint}: {angle_rad:.3f} rad ({angle_deg:.1f}°)")
 
-        print(f"🔔 回调: 模式已切换到 {mode_id}")
+        print(f"回调: 模式已切换到 {mode_id}")
 
 
     def on_emergency_stop():
-        print("🔔 回调: 紧急停止触发")
+        print("回调: 紧急停止触发")
 
 
     def on_torque_hold_start(torque, duration):
-        print(f"🔔 回调: 扭矩保持启动 - 扭矩:{torque}, 时长:{duration}秒")
+        print(f"回调: 扭矩保持启动 - 扭矩:{torque}, 时长:{duration}秒")
 
 
     def on_torque_hold_cancel():
-        print("🔔 回调: 扭矩保持取消")
+        print("回调: 扭矩保持取消")
 
 
     def on_exit():
-        print("🔔 回调: 程序退出")
+        print("回调: 程序退出")
 
 
     keyboard_ctrl.set_callback('on_mode_change', on_mode_change)
@@ -472,17 +472,17 @@ if __name__ == "__main__":
     success = keyboard_ctrl.start()
 
     if success:
-        print("✅ 键盘控制测试启动成功")
-        print("💡 请尝试按 1/2/3/4 切换模式，按住Enter键抓取，松开Enter键启动扭矩保持")
-        print("💡 按 S 键查看电机状态，按 Q 键退出")
+        print("键盘控制测试启动成功")
+        print("请尝试按 1/2/3/4 切换模式，按住Enter键抓取，松开Enter键启动扭矩保持")
+        print("按 S 键查看电机状态，按 Q 键退出")
 
         # 等待用户退出
         try:
             while keyboard_ctrl.is_running:
                 time.sleep(0.1)
         except KeyboardInterrupt:
-            print("\n🛑 用户中断")
+            print("\n 用户中断")
         finally:
             keyboard_ctrl.stop()
     else:
-        print("❌ 键盘控制测试启动失败")
+        print("键盘控制测试启动失败")
